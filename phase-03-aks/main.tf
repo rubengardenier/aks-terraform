@@ -10,7 +10,7 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = "c9f99369-d202-458b-9a97-4c95a5cbc20c"
+  subscription_id = "a5a51e6d-bc3e-4c08-b2cb-4d5dfb10d8bf"
 }
 
 resource "azurerm_resource_group" "aks" {
@@ -19,10 +19,10 @@ resource "azurerm_resource_group" "aks" {
 }
 
 resource "azurerm_kubernetes_cluster" "main" {
-  name                = "mercury-cluster"
+  name                = "stardust-cluster"
   location            = azurerm_resource_group.aks.location
   resource_group_name = azurerm_resource_group.aks.name
-  dns_prefix          = "mercury"
+  dns_prefix          = "stardust"
   kubernetes_version  = "1.32.0"
 
   default_node_pool {
@@ -40,58 +40,55 @@ resource "azurerm_kubernetes_cluster" "main" {
     network_policy     = "cilium"
     network_data_plane = "cilium"
   }
-
 }
 
-# DB
+# resource "azurerm_postgresql_flexible_server" "n8n_db" {
 
-resource "azurerm_postgresql_flexible_server" "n8n_db" {
+#   name                = "psql-n8n-stardust"
+#   resource_group_name = azurerm_resource_group.aks.name
+#   location            = azurerm_resource_group.aks.location
+#   zone                = "2"
 
-  name                = "psql-n8n-mercury"
-  resource_group_name = azurerm_resource_group.aks.name
-  location            = azurerm_resource_group.aks.location
-  zone                = "2"
+#   administrator_login    = "n8nadmin"
+#   administrator_password = "n8n-password-123"
 
-  administrator_login    = "n8nadmin"
-  administrator_password = "n8n-password-123"
+#   sku_name   = "B_Standard_B1ms"
+#   storage_mb = 32768
+#   version    = "16"
 
-  sku_name   = "B_Standard_B1ms"
-  storage_mb = 32768
-  version    = "16"
+#   backup_retention_days = 7
 
-  backup_retention_days = 7
+#   # Allow Azure services to access (needed for AKS)
+#   public_network_access_enabled = true
+# }
 
-  # Allow Azure services to access (needed for AKS)
-  public_network_access_enabled = true
-}
+# resource "azurerm_postgresql_flexible_server_configuration" "disable_ssl" {
+#   name      = "require_secure_transport"
+#   server_id = azurerm_postgresql_flexible_server.n8n_db.id
+#   value     = "OFF"
+# }
 
-resource "azurerm_postgresql_flexible_server_configuration" "disable_ssl" {
-  name      = "require_secure_transport"
-  server_id = azurerm_postgresql_flexible_server.n8n_db.id
-  value     = "OFF"
-}
+# resource "azurerm_postgresql_flexible_server_database" "n8n" {
+#   name      = "n8n"
+#   server_id = azurerm_postgresql_flexible_server.n8n_db.id
+# }
 
-resource "azurerm_postgresql_flexible_server_database" "n8n" {
-  name      = "n8n"
-  server_id = azurerm_postgresql_flexible_server.n8n_db.id
-}
+# resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
+#   name             = "AllowAzureServices"
+#   server_id        = azurerm_postgresql_flexible_server.n8n_db.id
+#   start_ip_address = "0.0.0.0"
+#   end_ip_address   = "0.0.0.0"
+# }
 
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure_services" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_postgresql_flexible_server.n8n_db.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
+# output "db_host" {
+#   value = azurerm_postgresql_flexible_server.n8n_db.fqdn
+# }
 
-output "db_host" {
-  value = azurerm_postgresql_flexible_server.n8n_db.fqdn
-}
+# output "db_name" {
+#   value = azurerm_postgresql_flexible_server_database.n8n.name
+# }
 
-output "db_name" {
-  value = azurerm_postgresql_flexible_server_database.n8n.name
-}
-
-output "db_user" {
-  value = azurerm_postgresql_flexible_server.n8n_db.administrator_login
-}
+# output "db_user" {
+#   value = azurerm_postgresql_flexible_server.n8n_db.administrator_login
+# }
 
